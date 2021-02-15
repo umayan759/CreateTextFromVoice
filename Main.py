@@ -7,30 +7,57 @@ import glob
 from numpy import fromstring, int16
 import speech_recognition as sr
 
+
 def main(args=None):
-    if len(args)<2:
+    if len(args) < 2:
         print('No args')
         return
     else:
         print(args[1:])
 
-    for file in args[1:]:
-        dir_path = split_sound(file, 60*3)
-        create_text(dir_path)
+    files = glob.glob(os.path.join(args[1], '*.wav'))
+
+    for file in files:
+        dir_path = split_sound(file, 60*1)
+        text = create_text(dir_path)
+        f = open(os.path.join(os.path.dirname(file), os.path.basename(file).split('.')[0] + '.txt'), 'a')
+        try:
+            f.write(text)
+        except Exception as e:
+            print(e)
+        finally:
+            print('writen to ' + f.name)
+            f.close()
+
 
 def create_text(dir_path):
     wfiles = glob.glob(os.path.join(dir_path, '*.wav'))
     print(wfiles)
+    text = ''
 
     for wfile in wfiles:
-        r = sr.Recognizer()
+        try:
+            tmp = google_recgnition(wfile)
+            print(tmp)
+            text = text + tmp + '\r\n'
+        except Exception as e:
+            print(e)
 
-        with sr.AudioFile(wfile) as source:
-            audio = r.record(source)
+    return text
 
-        text = r.recognize_google(audio, language='ja-JP')
 
-        print(text)
+def google_recgnition(file_path):
+    text = ''
+
+    print('process ' + file_path)
+    r = sr.Recognizer()
+
+    with sr.AudioFile(file_path) as source:
+        print('record ' + file_path)
+        audio = r.record(source)
+
+    print('recognize_google ' + file_path)
+    return r.recognize_google(audio, language='ja-JP')
 
 
 def split_sound(file: str, split_time: int):
@@ -75,7 +102,7 @@ def split_sound(file: str, split_time: int):
         for i in range(num_cut):
             print(i)
             # 出力データを生成
-            outf = os.path.join(dir_path, str(i) + '.wav')
+            outf = os.path.join(dir_path, f'{i:04}' + '.wav')
             start_cut = i * frames
             end_cut = i * frames + frames
             print(start_cut)
