@@ -1,2 +1,2 @@
 # CreateTextFromVoice
-音声からテキストを作成する（Python）
+音声からテキストを作成する（Python）...
